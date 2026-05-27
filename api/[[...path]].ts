@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { RequestHandler } from 'express';
-import { createNestApp } from '../apps/api/src/bootstrap';
+import { createNestApp } from '../apps/api/dist/bootstrap';
 
 let expressHandler: RequestHandler | undefined;
 
