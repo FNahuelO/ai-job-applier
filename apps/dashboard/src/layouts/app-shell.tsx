@@ -1,6 +1,7 @@
 import { BarChart3, Briefcase, Bot, LogOut, MoonStar, Settings2, Sparkles } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
 const links = [
@@ -13,6 +14,14 @@ const links = [
 ];
 
 export function AppShell() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout(): void {
+    logout();
+    navigate('/login');
+  }
+
   return (
     <div className="min-h-screen">
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[260px_1fr]">
@@ -64,8 +73,10 @@ export function AppShell() {
               <h2 className="text-3xl font-semibold text-white">Control centralizado</h2>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="secondary">Sincronizar fuentes</Button>
-              <Button>Ejecutar worker</Button>
+              <span className="text-sm text-slate-400">{user?.email}</span>
+              <Button variant="secondary" onClick={handleLogout}>
+                Cerrar sesión
+              </Button>
             </div>
           </header>
 

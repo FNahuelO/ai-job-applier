@@ -18,7 +18,7 @@ packages/
 1. Copiar `.env.example` a `.env`.
 2. Levantar PostgreSQL con `docker compose up -d postgres`.
 3. Instalar dependencias con `npm install`.
-4. Configurar el título de búsqueda desde el dashboard en **Jobs** (se guarda en la API y el worker lo lee en cada ejecución).
+4. Crear cuenta en el dashboard, conectar LinkedIn en **Jobs** y configurar el título de búsqueda (por usuario).
 5. Ejecutar cada workspace con:
    - `npm run dev:api`
    - `npm run dev:dashboard`
@@ -47,6 +47,7 @@ Configura estas variables en **Project Settings → Environment Variables** (Pro
 | `VITE_API_URL` | No | Por defecto `/api` (mismo dominio). Ya viene en `vercel.json` |
 | `JWT_EXPIRES_IN` | No | Por defecto `7d` |
 | `API_PREFIX` | No | Por defecto `api` |
+| `WORKER_API_SECRET` | Si | Mismo valor en API y worker local |
 
 Copia el resto de variables del worker/OpenAI en `.env.example` solo en el entorno donde ejecutes el worker.
 
@@ -58,6 +59,7 @@ Copia el resto de variables del worker/OpenAI en `.env.example` solo en el entor
 4. Ejecuta migraciones en PostgreSQL antes de usar la API en produccion:
    ```bash
    psql "$DATABASE_URL" -f database/migrations/001_app_settings.sql
+   psql "$DATABASE_URL" -f database/migrations/002_users_and_linkedin.sql
    ```
 
 ### CLI (opcional)
@@ -91,11 +93,13 @@ En tu `.env` local define al menos:
 
 ```env
 API_BASE_URL=https://tu-proyecto.vercel.app/api
+WORKER_API_SECRET=el-mismo-secreto-que-en-vercel
+JWT_SECRET=el-mismo-secreto-que-en-vercel
+PLAYWRIGHT_HEADLESS=false
 OPENAI_API_KEY=tu_api_key
-LINKEDIN_EMAIL=tu_email
-LINKEDIN_PASSWORD=tu_password
-PLAYWRIGHT_HEADLESS=true
 ```
+
+Los usuarios conectan LinkedIn desde el dashboard (sin guardar contraseñas de LinkedIn).
 
 ### 2) Levantar solo worker (sin api/postgres locales)
 

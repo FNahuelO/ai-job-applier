@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/protected-route';
 import { AppShell } from '@/layouts/app-shell';
 import { AiSettingsPage } from '@/pages/ai-settings-page';
 import { AnalyticsPage } from '@/pages/analytics-page';
@@ -14,32 +15,37 @@ export const router = createBrowserRouter([
     element: <LoginPage />
   },
   {
-    path: '/',
-    element: <AppShell />,
+    element: <ProtectedRoute />,
     children: [
       {
-        index: true,
-        element: <DashboardPage />
-      },
-      {
-        path: 'jobs',
-        element: <JobsPage />
-      },
-      {
-        path: 'applications',
-        element: <ApplicationsPage />
-      },
-      {
-        path: 'analytics',
-        element: <AnalyticsPage />
-      },
-      {
-        path: 'ai-settings',
-        element: <AiSettingsPage />
-      },
-      {
-        path: 'worker-logs',
-        element: <WorkerLogsPage />
+        path: '/',
+        element: <AppShell />,
+        children: [
+          {
+            index: true,
+            element: <DashboardPage />
+          },
+          {
+            path: 'jobs',
+            element: <JobsPage />
+          },
+          {
+            path: 'applications',
+            element: <ApplicationsPage />
+          },
+          {
+            path: 'analytics',
+            element: <AnalyticsPage />
+          },
+          {
+            path: 'ai-settings',
+            element: <AiSettingsPage />
+          },
+          {
+            path: 'worker-logs',
+            element: <WorkerLogsPage />
+          }
+        ]
       }
     ]
   }

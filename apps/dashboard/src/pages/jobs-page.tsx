@@ -5,6 +5,12 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
 import { jobs } from '@/data/mock';
+import {
+  disconnectLinkedIn,
+  getLinkedInConnectStatus,
+  getLinkedInStatus,
+  startLinkedInConnect
+} from '@/lib/linkedin';
 import { getWorkerSettings, updateWorkerSettings } from '@/lib/settings';
 
 export function JobsPage() {
@@ -13,20 +19,29 @@ export function JobsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [linkedinConnected, setLinkedinConnected] = useState(false);
+  const [linkedinConnectedAt, setLinkedinConnectedAt] = useState<string | undefined>();
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectMessage, setConnectMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadSettings(): Promise<void> {
       try {
-        const settings = await getWorkerSettings();
+        const [settings, linkedinStatus] = await Promise.all([
+          getWorkerSettings(),
+          getLinkedInStatus()
+        ]);
         if (!cancelled) {
           setJobSearchTitle(settings.jobSearchTitle);
+          setLinkedinConnected(linkedinStatus.connected);
+          setLinkedinConnectedAt(linkedinStatus.connectedAt);
           setError(null);
         }
       } catch {
         if (!cancelled) {
-          setError('No se pudo cargar la configuración de búsqueda.');
+          setError('No se pudo cargar la configuración.');
         }
       } finally {
         if (!cancelled) {
@@ -41,6 +56,60 @@ export function JobsPage() {
       cancelled = true;
     };
   }, []);
+
+  async function handleConnectLinkedIn(): Promise<void> {
+    setIsConnecting(true);
+    setConnectMessage(null);
+    setError(null);
+
+    try {
+      const connect = await startLinkedInConnect();
+      setConnectMessage(
+        'Se abrirá LinkedIn en tu máquina (worker). Completá el login en la ventana del navegador.'
+      );
+
+      const pollUntil = Date.now() + 12 * 60 * 1000;
+
+      while (Date.now() < pollUntil) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const status = await getLinkedInConnectStatus(connect.token);
+
+        if (status.status === 'completed') {
+          setLinkedinConnected(true);
+          setLinkedinConnectedAt(status.connectedAt);
+          setConnectMessage('LinkedIn conectado correctamente.');
+          return;
+        }
+
+        if (status.status === 'failed') {
+          setConnectMessage(status.error ?? 'No se pudo conectar LinkedIn.');
+          return;
+        }
+
+        if (status.status === 'expired') {
+          setConnectMessage('La solicitud expiró. Intentá de nuevo.');
+          return;
+        }
+      }
+
+      setConnectMessage('Tiempo de espera agotado. Verificá que el worker esté corriendo.');
+    } catch {
+      setConnectMessage('No se pudo iniciar la conexión con LinkedIn.');
+    } finally {
+      setIsConnecting(false);
+    }
+  }
+
+  async function handleDisconnectLinkedIn(): Promise<void> {
+    try {
+      const status = await disconnectLinkedIn();
+      setLinkedinConnected(status.connected);
+      setLinkedinConnectedAt(status.connectedAt);
+      setConnectMessage('Cuenta de LinkedIn desconectada.');
+    } catch {
+      setConnectMessage('No se pudo desconectar LinkedIn.');
+    }
+  }
 
   async function handleSave(): Promise<void> {
     setIsSaving(true);
@@ -60,6 +129,46 @@ export function JobsPage() {
 
   return (
     <div className="grid gap-6">
+      <Card className="max-w-3xl">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-xl font-semibold text-white">Cuenta de LinkedIn</h3>
+            <p className="text-sm text-slate-400">
+              Cada usuario conecta su propia cuenta. No guardamos tu contraseña de LinkedIn.
+            </p>
+          </div>
+          <Badge
+            className={
+              linkedinConnected
+                ? 'bg-emerald-500/15 text-emerald-300'
+                : 'bg-amber-500/15 text-amber-200'
+            }
+          >
+            {linkedinConnected ? 'Conectado' : 'Sin conectar'}
+          </Badge>
+        </div>
+        {linkedinConnectedAt ? (
+          <p className="mb-4 text-xs text-slate-500">
+            Conectado: {new Date(linkedinConnectedAt).toLocaleString()}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-3">
+          <Button disabled={isConnecting || linkedinConnected} onClick={() => void handleConnectLinkedIn()}>
+            {isConnecting ? 'Conectando...' : 'Conectar LinkedIn'}
+          </Button>
+          {linkedinConnected ? (
+            <Button variant="secondary" onClick={() => void handleDisconnectLinkedIn()}>
+              Desconectar
+            </Button>
+          ) : null}
+        </div>
+        {connectMessage ? <p className="mt-3 text-sm text-slate-300">{connectMessage}</p> : null}
+        <p className="mt-3 text-xs text-slate-500">
+          Requisito: el worker debe estar activo en tu máquina (`ai-job-worker.service`) con{' '}
+          <code className="text-violet-300">PLAYWRIGHT_HEADLESS=false</code>.
+        </p>
+      </Card>
+
       <Card className="max-w-3xl">
         <div className="mb-4">
           <h3 className="text-xl font-semibold text-white">Búsqueda en LinkedIn</h3>

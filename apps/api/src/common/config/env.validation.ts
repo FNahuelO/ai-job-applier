@@ -5,11 +5,13 @@ export interface ApiEnvironment {
   databaseUrl: string;
   jwtSecret: string;
   jwtExpiresIn: string;
+  workerApiSecret: string;
 }
 
 export function getApiEnvironment(env: NodeJS.ProcessEnv): ApiEnvironment {
   const databaseUrl = env.DATABASE_URL?.trim();
   const jwtSecret = env.JWT_SECRET?.trim();
+  const workerApiSecret = env.WORKER_API_SECRET?.trim();
 
   if (!databaseUrl) {
     throw new Error('DATABASE_URL es obligatorio.');
@@ -19,12 +21,17 @@ export function getApiEnvironment(env: NodeJS.ProcessEnv): ApiEnvironment {
     throw new Error('JWT_SECRET es obligatorio.');
   }
 
+  if (!workerApiSecret) {
+    throw new Error('WORKER_API_SECRET es obligatorio.');
+  }
+
   return {
     nodeEnv: env.NODE_ENV ?? 'development',
     apiPort: Number(env.API_PORT ?? 3000),
     apiPrefix: env.API_PREFIX ?? 'api',
     databaseUrl,
     jwtSecret,
-    jwtExpiresIn: env.JWT_EXPIRES_IN ?? '7d'
+    jwtExpiresIn: env.JWT_EXPIRES_IN ?? '7d',
+    workerApiSecret
   };
 }

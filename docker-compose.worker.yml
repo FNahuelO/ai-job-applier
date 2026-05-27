@@ -7,4 +7,7 @@ services:
       - .env
     environment:
       API_BASE_URL: ${API_BASE_URL:-https://tu-proyecto.vercel.app/api}
+      WORKER_API_SECRET: ${WORKER_API_SECRET}
+      PLAYWRIGHT_HEADLESS: ${PLAYWRIGHT_HEADLESS:-false}
+      WORKER_POLL_INTERVAL_MS: ${WORKER_POLL_INTERVAL_MS:-15000}
     restart: unless-stopped

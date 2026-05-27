@@ -1,54 +1,37 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import type { CreationAttributes } from 'sequelize';
 import type { UpdateWorkerSettingsInput, WorkerSettings } from '@ai-job-applier/shared';
-import { AppSettings } from '../database/models/app-settings.model';
+import { User } from '../database/models/user.model';
 import { UpdateWorkerSettingsDto } from './dto/update-worker-settings.dto';
 
-const SETTINGS_ID = 'default';
-
 @Injectable()
-export class SettingsService implements OnModuleInit {
-  constructor(
-    @InjectModel(AppSettings)
-    private readonly appSettingsModel: typeof AppSettings
-  ) {}
+export class SettingsService {
+  constructor(@InjectModel(User) private readonly userModel: typeof User) {}
 
-  async onModuleInit(): Promise<void> {
-    const existing = await this.appSettingsModel.findByPk(SETTINGS_ID);
+  async getSettings(userId: string): Promise<WorkerSettings> {
+    const user = await this.userModel.findByPk(userId);
 
-    if (!existing) {
-      await this.appSettingsModel.create({
-        id: SETTINGS_ID,
-        jobSearchTitle: ''
-      } as CreationAttributes<AppSettings>);
-    }
-  }
-
-  async getSettings(): Promise<WorkerSettings> {
-    const row = await this.appSettingsModel.findByPk(SETTINGS_ID);
-
-    if (!row) {
-      throw new NotFoundException('Configuración no encontrada.');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
     }
 
-    return { jobSearchTitle: row.jobSearchTitle };
+    return { jobSearchTitle: user.jobSearchTitle };
   }
 
-  async updateSettings(dto: UpdateWorkerSettingsDto): Promise<WorkerSettings> {
-    const row = await this.appSettingsModel.findByPk(SETTINGS_ID);
+  async updateSettings(userId: string, dto: UpdateWorkerSettingsDto): Promise<WorkerSettings> {
+    const user = await this.userModel.findByPk(userId);
 
-    if (!row) {
-      throw new NotFoundException('Configuración no encontrada.');
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado.');
     }
 
     const payload: UpdateWorkerSettingsInput = {
       jobSearchTitle: dto.jobSearchTitle.trim()
     };
 
-    row.jobSearchTitle = payload.jobSearchTitle;
-    await row.save();
+    user.jobSearchTitle = payload.jobSearchTitle;
+    await user.save();
 
-    return { jobSearchTitle: row.jobSearchTitle };
+    return { jobSearchTitle: user.jobSearchTitle };
   }
 }

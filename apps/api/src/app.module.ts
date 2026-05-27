@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { AuthModule } from './auth/auth.module';
 import { getApiEnvironment } from './common/config/env.validation';
+import {
+  AiLog,
+  Application,
+  Company,
+  Job,
+  LinkedInConnectRequest,
+  LinkedInSession,
+  User
+} from './database/models';
 import { HealthController } from './health/health.controller';
-import { AiLog, AppSettings, Application, Company, Job, User } from './database/models';
+import { LinkedInModule } from './linkedin/linkedin.module';
 import { SettingsModule } from './settings/settings.module';
+import { WorkerApiModule } from './worker/worker.module';
 
 @Module({
   imports: [
@@ -22,11 +33,22 @@ import { SettingsModule } from './settings/settings.module';
           autoLoadModels: true,
           synchronize: false,
           logging: env.nodeEnv === 'development',
-          models: [User, Company, Job, Application, AiLog, AppSettings]
+          models: [
+            User,
+            Company,
+            Job,
+            Application,
+            AiLog,
+            LinkedInConnectRequest,
+            LinkedInSession
+          ]
         };
       }
     }),
-    SettingsModule
+    AuthModule,
+    SettingsModule,
+    LinkedInModule,
+    WorkerApiModule
   ],
   controllers: [HealthController]
 })
