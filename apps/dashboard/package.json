@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:vercel": "npm --prefix ../.. run build -w @ai-job-applier/shared && npm run build",
     "lint": "eslint src vite.config.ts tailwind.config.ts",
     "preview": "vite preview"
   },

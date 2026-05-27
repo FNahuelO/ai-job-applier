@@ -19,7 +19,8 @@
     "format": "prettier --write .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "db:logs": "docker compose logs -f postgres"
+    "db:logs": "docker compose logs -f postgres",
+    "deploy:vercel": "bash scripts/vercel-deploy.sh"
   },
   "engines": {
     "node": ">=22.0.0",

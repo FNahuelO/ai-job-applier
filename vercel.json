@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/dashboard",
   "outputDirectory": "apps/dashboard/dist",
   "framework": null,
   "env": {
