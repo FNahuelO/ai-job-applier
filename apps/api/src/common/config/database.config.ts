@@ -30,15 +30,22 @@ function resolveDatabaseUrl(env: NodeJS.ProcessEnv): string {
 }
 
 function parsePostgresUrl(databaseUrl: string) {
-  const normalized = databaseUrl.replace(/^postgresql:\/\//, 'postgres://');
-  const parsed = new URL(normalized);
+  const match = databaseUrl.trim().match(
+    /^postgres(?:ql)?:\/\/([^:]+):([^@]+)@([^:/]+)(?::(\d+))?\/([^?]+)/
+  );
+
+  if (!match) {
+    throw new Error('DATABASE_URL tiene un formato inválido.');
+  }
+
+  const [, username, password, host, port, database] = match;
 
   return {
-    host: parsed.hostname,
-    port: parsed.port ? Number(parsed.port) : 5432,
-    username: decodeURIComponent(parsed.username),
-    password: decodeURIComponent(parsed.password),
-    database: parsed.pathname.replace(/^\//, '').split('?')[0] ?? ''
+    host,
+    port: port ? Number(port) : 5432,
+    username: decodeURIComponent(username),
+    password: decodeURIComponent(password),
+    database
   };
 }
 

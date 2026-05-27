@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import type { CreationAttributes } from 'sequelize';
-import * as bcrypt from 'bcrypt';
+import { compare, hash } from 'bcryptjs';
 import type { AuthResponse, AuthUser } from '@ai-job-applier/shared';
 import { User } from '../database/models/user.model';
 import type { AuthenticatedUser } from './auth.types';
@@ -33,7 +33,7 @@ export class AuthService {
       throw new ConflictException('Ya existe una cuenta con ese email.');
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const passwordHash = await hash(dto.password, 12);
     const user = await this.userModel.create({
       email,
       password: passwordHash,
@@ -51,7 +51,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas.');
     }
 
-    const isValidPassword = await bcrypt.compare(dto.password, user.password);
+    const isValidPassword = await compare(dto.password, user.password);
 
     if (!isValidPassword) {
       throw new UnauthorizedException('Credenciales inválidas.');

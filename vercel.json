@@ -24,7 +24,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 60,
-      "includeFiles": "apps/api/src/**,packages/shared/dist/**,node_modules/pg/**,node_modules/pg-hstore/**,node_modules/bcrypt/**,node_modules/sequelize/**,node_modules/sequelize-typescript/**"
+      "includeFiles": "apps/api/src/**,packages/shared/dist/**,node_modules/pg/**,node_modules/pg-hstore/**,node_modules/bcryptjs/**,node_modules/sequelize/**,node_modules/sequelize-typescript/**"
     }
   }
 }

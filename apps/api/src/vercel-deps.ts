@@ -4,4 +4,4 @@
  */
 require('pg');
 require('pg-hstore');
-require('bcrypt');
+require('bcryptjs');
