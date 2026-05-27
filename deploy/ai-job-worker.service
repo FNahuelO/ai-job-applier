@@ -1,0 +1,16 @@
+[Unit]
+Description=AI Job Applier Worker (Docker Compose)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/franco/Escritorio/ai-job-applier
+ExecStart=/usr/bin/docker compose -f /home/franco/Escritorio/ai-job-applier/docker-compose.worker.yml up -d --build
+ExecStop=/usr/bin/docker compose -f /home/franco/Escritorio/ai-job-applier/docker-compose.worker.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

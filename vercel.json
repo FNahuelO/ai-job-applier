@@ -1,0 +1,23 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "apps/dashboard/dist",
+  "framework": null,
+  "env": {
+    "VITE_API_URL": "/api"
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "includeFiles": "apps/api/src/**,packages/shared/dist/**"
+    }
+  }
+}

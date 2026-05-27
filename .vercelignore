@@ -1,0 +1,6 @@
+apps/worker
+**/Dockerfile
+docker-compose.yml
+playwright-report
+test-results
+storage

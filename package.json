@@ -1,0 +1,40 @@
+{
+  "name": "ai-job-applier",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo para automatizacion de postulaciones laborales con IA.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:shared": "npm run build -w packages/shared",
+    "dev:api": "npm run build -w packages/shared && npm run dev -w apps/api",
+    "dev:dashboard": "npm run dev -w apps/dashboard",
+    "dev:worker": "npm run build -w packages/shared && npm run dev -w apps/worker",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/dashboard && npm run build -w apps/worker",
+    "build:vercel": "npm run build -w packages/shared && npm run build -w apps/dashboard",
+    "lint": "npm run lint -w packages/shared && npm run lint -w apps/api && npm run lint -w apps/dashboard && npm run lint -w apps/worker",
+    "format": "prettier --write .",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.1",
+    "@vercel/node": "^5.8.5",
+    "eslint": "^10.4.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0"
+  }
+}
