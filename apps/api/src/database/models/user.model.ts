@@ -1,6 +1,5 @@
 import {
   Column,
-  CreatedAt,
   DataType,
   HasMany,
   HasOne,
@@ -42,11 +41,11 @@ export class User extends Model<User> {
   })
   declare jobSearchTitle: string;
 
-  @CreatedAt
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    field: 'created_at'
+    field: 'created_at',
+    defaultValue: () => new Date()
   })
   declare createdAt: Date;
 
