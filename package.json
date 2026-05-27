@@ -4,17 +4,18 @@
   "private": true,
   "description": "Monorepo para automatizacion de postulaciones laborales con IA.",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/api",
+    "apps/dashboard",
+    "packages/shared"
   ],
   "scripts": {
     "dev:shared": "npm run build -w packages/shared",
     "dev:api": "npm run build -w packages/shared && npm run dev -w apps/api",
     "dev:dashboard": "npm run dev -w apps/dashboard",
-    "dev:worker": "npm run build -w packages/shared && npm run dev -w apps/worker",
-    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/dashboard && npm run build -w apps/worker",
+    "dev:worker": "npm run build -w packages/shared && npm --prefix apps/worker run dev",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/dashboard && npm --prefix apps/worker run build",
     "build:vercel": "npm run build -w packages/shared && npm run build -w apps/dashboard",
-    "lint": "npm run lint -w packages/shared && npm run lint -w apps/api && npm run lint -w apps/dashboard && npm run lint -w apps/worker",
+    "lint": "npm run lint -w packages/shared && npm run lint -w apps/api && npm run lint -w apps/dashboard && npm --prefix apps/worker run lint",
     "format": "prettier --write .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

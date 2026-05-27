@@ -10,7 +10,7 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
-    "@ai-job-applier/shared": "*",
+    "@ai-job-applier/shared": "file:../../packages/shared",
     "playwright": "^1.60.0"
   }
 }
