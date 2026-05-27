@@ -58,7 +58,7 @@ Copia el resto de variables del worker/OpenAI en `.env.example` solo en el entor
    - **Framework Preset:** `Other` (no `Vite`, o Vercel ejecuta el build solo en `apps/dashboard`).
    - **Build Command:** `npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/dashboard`  
      (o desactivá los overrides y usá el `vercel.json` del repo).
-   - **Output Directory:** `apps/dashboard/dist`
+   - **Output Directory:** `dist` (el build copia desde `apps/dashboard/dist`)
    - **Install Command:** `npm install`
 2. Vercel detecta `vercel.json`: instala dependencias, ejecuta `npm run build:vercel` y publica `apps/dashboard/dist`.
 3. Las rutas `/api/*` las atiende la funcion serverless en `api/[[...path]].ts` (NestJS).

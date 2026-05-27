@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/dashboard",
-  "outputDirectory": "apps/dashboard/dist",
+  "buildCommand": "npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/dashboard && rm -rf dist && cp -r apps/dashboard/dist dist",
+  "outputDirectory": "dist",
   "framework": null,
   "env": {
     "VITE_API_URL": "/api"
