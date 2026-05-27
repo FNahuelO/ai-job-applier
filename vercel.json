@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install",
+  "installCommand": "npm install -w packages/shared -w apps/api -w apps/dashboard",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "apps/dashboard/dist",
   "framework": null,
