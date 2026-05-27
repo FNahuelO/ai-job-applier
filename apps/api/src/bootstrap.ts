@@ -16,13 +16,15 @@ export async function createNestApp(): Promise<NestExpressApplication> {
   }
 
   const env = getApiEnvironment(process.env);
+  // En Vercel la función ya está montada bajo /api; el prefijo global duplicaría rutas.
+  const apiPrefix = process.env.VERCEL ? '' : env.apiPrefix;
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true
   });
 
   app.use(helmet());
   app.use(cookieParser());
-  app.setGlobalPrefix(env.apiPrefix);
+  app.setGlobalPrefix(apiPrefix);
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

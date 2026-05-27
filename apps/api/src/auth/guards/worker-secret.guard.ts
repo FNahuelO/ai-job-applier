@@ -15,7 +15,7 @@ export class WorkerSecretGuard implements CanActivate {
     const env = getApiEnvironment(process.env);
     const providedSecret = request.headers['x-worker-secret'];
 
-    if (!providedSecret || providedSecret !== env.workerApiSecret) {
+    if (!env.workerApiSecret || !providedSecret || providedSecret !== env.workerApiSecret) {
       throw new UnauthorizedException('Worker no autorizado.');
     }
 
