@@ -8,12 +8,22 @@ export interface ApiEnvironment {
   workerApiSecret: string;
 }
 
-export function getApiEnvironment(env: NodeJS.ProcessEnv): ApiEnvironment {
-  const databaseUrl = env.DATABASE_URL?.trim();
-  const jwtSecret = env.JWT_SECRET?.trim();
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL es obligatorio.');
+function resolveDatabaseUrl(env: NodeJS.ProcessEnv): string {
+  const candidates = [env.DATABASE_URL, env.POSTGRES_URL, env.POSTGRES_PRISMA_URL];
+
+  for (const candidate of candidates) {
+    const value = candidate?.trim();
+    if (value) {
+      return value;
+    }
   }
+
+  throw new Error('DATABASE_URL es obligatorio.');
+}
+
+export function getApiEnvironment(env: NodeJS.ProcessEnv): ApiEnvironment {
+  const databaseUrl = resolveDatabaseUrl(env);
+  const jwtSecret = env.JWT_SECRET?.trim();
 
   if (!jwtSecret) {
     throw new Error('JWT_SECRET es obligatorio.');
