@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/api && npm run build -w @ai-job-applier/dashboard && rm -rf dist && cp -r apps/dashboard/dist dist",
+  "buildCommand": "npm run build -w @ai-job-applier/shared && npm run build -w @ai-job-applier/dashboard && rm -rf dist && cp -r apps/dashboard/dist dist",
   "outputDirectory": "dist",
   "framework": null,
   "env": {
@@ -17,7 +17,7 @@
     "api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "apps/api/dist/**,packages/shared/dist/**"
+      "includeFiles": "apps/api/src/**,packages/shared/dist/**"
     }
   }
 }

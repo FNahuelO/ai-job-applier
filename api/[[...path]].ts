@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { RequestHandler } from 'express';
-import { createNestApp } from '../apps/api/dist/bootstrap';
+import { createNestApp } from '../apps/api/src/bootstrap';
 
 let expressHandler: RequestHandler | undefined;
 
@@ -14,7 +14,7 @@ export default async function handler(
   }
 
   await new Promise<void>((resolve, reject) => {
-    expressHandler!(req, res, (error?: unknown) => {
+    expressHandler!(req as never, res as never, (error?: unknown) => {
       if (error) {
         reject(error);
         return;
