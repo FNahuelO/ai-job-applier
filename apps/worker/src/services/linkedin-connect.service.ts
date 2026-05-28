@@ -67,7 +67,7 @@ export class LinkedInConnectService {
       // En algunos desafíos LinkedIn cierra/reemplaza la pestaña original.
       // Por eso revisamos todas las páginas del contexto en lugar de una sola.
       while (Date.now() < deadline) {
-        const pages = context.pages().filter((p) => !p.isClosed());
+        let pages = context.pages().filter((p) => !p.isClosed());
 
         for (const currentPage of pages) {
           const currentUrl = currentPage.url();
@@ -78,9 +78,21 @@ export class LinkedInConnectService {
         }
 
         if (pages.length === 0) {
-          throw new Error(
-            'Se cerró la ventana de LinkedIn durante la conexión. Mantené la ventana abierta hasta terminar login/validación.'
-          );
+          // LinkedIn puede cerrar/reabrir pestañas durante challenges.
+          // Si ocurre, abrimos una pestaña nueva para verificar si la sesión ya quedó autenticada.
+          const recoveryPage = await context.newPage();
+          await recoveryPage.goto('https://www.linkedin.com/feed/', {
+            waitUntil: 'domcontentloaded'
+          });
+          pages = context.pages().filter((p) => !p.isClosed());
+
+          for (const currentPage of pages) {
+            const currentUrl = currentPage.url();
+            if (loggedInRegex.test(currentUrl)) {
+              await currentPage.waitForLoadState('domcontentloaded').catch(() => undefined);
+              return await context.storageState();
+            }
+          }
         }
 
         await pages[0]
