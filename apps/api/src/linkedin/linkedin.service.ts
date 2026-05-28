@@ -161,6 +161,10 @@ export class LinkedInService {
       throw new NotFoundException('Solicitud de conexión no encontrada.');
     }
 
+    if (request.status !== 'pending') {
+      return;
+    }
+
     request.status = 'failed';
     request.errorMessage = error;
     await request.save();

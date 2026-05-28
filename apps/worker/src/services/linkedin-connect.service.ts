@@ -58,7 +58,8 @@ export class LinkedInConnectService {
 
     try {
       await page.goto('https://www.linkedin.com/login', { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(/linkedin\.com\/(feed|checkpoint|jobs)/iu, {
+      // Espera a login real. "checkpoint" significa que aún falta validación (2FA/challenge).
+      await page.waitForURL(/linkedin\.com\/(feed|jobs)/iu, {
         timeout: 10 * 60 * 1000
       });
       await page.waitForLoadState('networkidle');
