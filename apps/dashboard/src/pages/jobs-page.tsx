@@ -31,29 +31,40 @@ export function JobsPage() {
     let cancelled = false;
 
     async function loadSettings(): Promise<void> {
-      try {
-        const [settings, linkedinStatus, jobsData] = await Promise.all([
-          getWorkerSettings(),
-          getLinkedInStatus(),
-          getDashboardJobs()
-        ]);
-        if (!cancelled) {
-          setJobSearchTitle(settings.jobSearchTitle);
-          setLinkedinConnected(linkedinStatus.connected);
-          setLinkedinConnectedAt(linkedinStatus.connectedAt);
-          setJobs(jobsData);
-          setError(null);
-        }
-      } catch {
-        if (!cancelled) {
-          setError('No se pudo cargar la configuración.');
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-          setIsLoadingJobs(false);
-        }
+      const [settingsResult, linkedinResult, jobsResult] = await Promise.allSettled([
+        getWorkerSettings(),
+        getLinkedInStatus(),
+        getDashboardJobs()
+      ]);
+
+      if (cancelled) {
+        return;
       }
+
+      if (settingsResult.status === 'fulfilled') {
+        setJobSearchTitle(settingsResult.value.jobSearchTitle);
+      }
+
+      if (linkedinResult.status === 'fulfilled') {
+        setLinkedinConnected(linkedinResult.value.connected);
+        setLinkedinConnectedAt(linkedinResult.value.connectedAt);
+      }
+
+      if (jobsResult.status === 'fulfilled') {
+        setJobs(jobsResult.value);
+      }
+
+      if (
+        settingsResult.status === 'rejected' ||
+        linkedinResult.status === 'rejected'
+      ) {
+        setError('No se pudo cargar la configuración.');
+      } else {
+        setError(null);
+      }
+
+      setIsLoading(false);
+      setIsLoadingJobs(false);
     }
 
     void loadSettings();

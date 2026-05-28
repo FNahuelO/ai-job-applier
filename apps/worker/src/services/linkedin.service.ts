@@ -11,6 +11,18 @@ export interface LinkedInJobCard {
 }
 
 export class LinkedInService {
+  private async firstVisible(page: Page, selectors: string[]) {
+    for (const selector of selectors) {
+      const locator = page.locator(selector).first();
+      const visible = await locator.isVisible().catch(() => false);
+      if (visible) {
+        return locator;
+      }
+    }
+
+    return null;
+  }
+
   async openJobs(page: Page): Promise<void> {
     await page.goto('https://www.linkedin.com/jobs/', {
       waitUntil: 'domcontentloaded'
@@ -21,13 +33,36 @@ export class LinkedInService {
   async searchRelevantJobs(page: Page, jobSearchTitle?: string): Promise<LinkedInJobCard[]> {
     await this.openJobs(page);
 
-    const searchInput = page.getByRole('combobox', { name: /search by title/i }).first();
     const searchQuery = jobSearchTitle?.trim() || defaultJobSearchFilters.keywords.join(' OR ');
+    const searchInput = await this.firstVisible(page, [
+      'input[aria-label*="title" i]',
+      'input[aria-label*="cargo" i]',
+      'input[aria-label*="puesto" i]',
+      'input[placeholder*="Search by title" i]',
+      'input[placeholder*="Buscar por puesto" i]',
+      'input[id*="jobs-search-box-keyword-id"]'
+    ]);
+
+    if (!searchInput) {
+      throw new Error('No se encontró el campo de búsqueda de puesto en LinkedIn Jobs.');
+    }
+
     await searchInput.fill(searchQuery);
 
-    const locationInput = page.getByRole('combobox', { name: /city|zip code|location/i }).first();
-    await locationInput.fill('Remote');
-    await locationInput.press('Enter');
+    const locationInput = await this.firstVisible(page, [
+      'input[aria-label*="location" i]',
+      'input[aria-label*="ubicación" i]',
+      'input[placeholder*="City, state, or zip code" i]',
+      'input[placeholder*="Ciudad" i]',
+      'input[id*="jobs-search-box-location-id"]'
+    ]);
+
+    if (locationInput) {
+      await locationInput.fill('Remote');
+      await locationInput.press('Enter');
+    } else {
+      await searchInput.press('Enter');
+    }
 
     await randomDelay(1500, 3200);
     await humanScroll(page);
