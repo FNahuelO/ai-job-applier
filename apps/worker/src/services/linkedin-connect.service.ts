@@ -5,6 +5,8 @@ import { ApiClientService } from './api-client.service.js';
 export class LinkedInConnectService {
   constructor(private readonly apiClient: ApiClientService) {}
 
+  private static readonly CONNECT_TIMEOUT_MS = 10 * 60 * 1000;
+
   async processPendingRequests(): Promise<void> {
     const pending = await this.apiClient.getPendingLinkedInConnects();
 
@@ -58,12 +60,35 @@ export class LinkedInConnectService {
 
     try {
       await page.goto('https://www.linkedin.com/login', { waitUntil: 'domcontentloaded' });
-      // Espera a login real. "checkpoint" significa que aún falta validación (2FA/challenge).
-      await page.waitForURL(/linkedin\.com\/(feed|jobs)/iu, {
-        timeout: 10 * 60 * 1000
-      });
-      await page.waitForLoadState('networkidle');
-      return await context.storageState();
+
+      const loggedInRegex = /linkedin\.com\/(feed|jobs)/iu;
+      const deadline = Date.now() + LinkedInConnectService.CONNECT_TIMEOUT_MS;
+
+      // En algunos desafíos LinkedIn cierra/reemplaza la pestaña original.
+      // Por eso revisamos todas las páginas del contexto en lugar de una sola.
+      while (Date.now() < deadline) {
+        const pages = context.pages().filter((p) => !p.isClosed());
+
+        for (const currentPage of pages) {
+          const currentUrl = currentPage.url();
+          if (loggedInRegex.test(currentUrl)) {
+            await currentPage.waitForLoadState('domcontentloaded').catch(() => undefined);
+            return await context.storageState();
+          }
+        }
+
+        if (pages.length === 0) {
+          throw new Error(
+            'Se cerró la ventana de LinkedIn durante la conexión. Mantené la ventana abierta hasta terminar login/validación.'
+          );
+        }
+
+        await pages[0]
+          .waitForURL(loggedInRegex, { timeout: 1500, waitUntil: 'domcontentloaded' })
+          .catch(() => undefined);
+      }
+
+      throw new Error('No se detectó login completo en LinkedIn dentro del tiempo esperado.');
     } finally {
       await context.close();
       await browser.close();
