@@ -6,6 +6,7 @@ export class LinkedInConnectService {
   constructor(private readonly apiClient: ApiClientService) {}
 
   private static readonly CONNECT_TIMEOUT_MS = 10 * 60 * 1000;
+  private static readonly WAIT_SLICE_MS = 1000;
 
   async processPendingRequests(): Promise<void> {
     const pending = await this.apiClient.getPendingLinkedInConnects();
@@ -50,7 +51,8 @@ export class LinkedInConnectService {
   private async runManualLoginFlow() {
     const env = getWorkerEnvironment(process.env);
     const browser = await chromium.launch({
-      headless: env.headless,
+      // El flujo de conexión requiere interacción manual del usuario.
+      headless: false,
       slowMo: env.slowMo
     });
     const context = await browser.newContext({
@@ -78,20 +80,17 @@ export class LinkedInConnectService {
         }
 
         if (pages.length === 0) {
-          // LinkedIn puede cerrar/reabrir pestañas durante challenges.
-          // Si ocurre, abrimos una pestaña nueva para verificar si la sesión ya quedó autenticada.
-          const recoveryPage = await context.newPage();
-          await recoveryPage.goto('https://www.linkedin.com/feed/', {
-            waitUntil: 'domcontentloaded'
-          });
+          // LinkedIn puede cerrar y abrir pestañas durante el challenge.
+          // Esperamos brevemente para que aparezca una nueva antes de fallar.
+          await Promise.race([
+            context.waitForEvent('page').catch(() => undefined),
+            new Promise((resolve) =>
+              setTimeout(resolve, LinkedInConnectService.WAIT_SLICE_MS)
+            )
+          ]);
           pages = context.pages().filter((p) => !p.isClosed());
-
-          for (const currentPage of pages) {
-            const currentUrl = currentPage.url();
-            if (loggedInRegex.test(currentUrl)) {
-              await currentPage.waitForLoadState('domcontentloaded').catch(() => undefined);
-              return await context.storageState();
-            }
+          if (pages.length === 0) {
+            continue;
           }
         }
 

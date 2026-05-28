@@ -1,9 +1,45 @@
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
-import { applications } from '@/data/mock';
+import {
+  getDashboardApplications,
+  type DashboardApplication
+} from '@/lib/dashboard';
 
 export function ApplicationsPage() {
+  const [applications, setApplications] = useState<DashboardApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadApplications(): Promise<void> {
+      try {
+        const data = await getDashboardApplications();
+        if (!cancelled) {
+          setApplications(data);
+          setError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('No se pudo cargar el historial de postulaciones.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadApplications();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <Card>
       <div className="mb-6">
@@ -34,9 +70,16 @@ export function ApplicationsPage() {
                 <TD>{application.date}</TD>
               </TR>
             ))}
+            {!isLoading && applications.length === 0 ? (
+              <TR>
+                <TD colSpan={4}>Todavía no hay postulaciones registradas.</TD>
+              </TR>
+            ) : null}
           </TBody>
         </Table>
       </div>
+      {isLoading ? <p className="mt-4 text-sm text-slate-400">Cargando historial...</p> : null}
+      {error ? <p className="mt-4 text-sm text-rose-400">{error}</p> : null}
     </Card>
   );
 }

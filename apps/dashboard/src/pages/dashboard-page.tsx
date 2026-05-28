@@ -1,8 +1,41 @@
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { metrics } from '@/data/mock';
+import { getDashboardMetrics, type DashboardMetric } from '@/lib/dashboard';
 
 export function DashboardPage() {
+  const [metrics, setMetrics] = useState<DashboardMetric[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMetrics(): Promise<void> {
+      try {
+        const data = await getDashboardMetrics();
+        if (!cancelled) {
+          setMetrics(data);
+          setError(null);
+        }
+      } catch {
+        if (!cancelled) {
+          setError('No se pudieron cargar las métricas.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadMetrics();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
@@ -11,10 +44,15 @@ export function DashboardPage() {
             <p className="text-sm text-slate-400">{metric.label}</p>
             <div className="mt-3 flex items-end justify-between">
               <span className="text-4xl font-semibold text-white">{metric.value}</span>
-              <Badge className="bg-emerald-500/15 text-emerald-300">{metric.trend}</Badge>
+              <Badge className="bg-violet-500/15 text-violet-200">{metric.trend}</Badge>
             </div>
           </Card>
         ))}
+        {isLoading ? <p className="text-sm text-slate-400">Cargando métricas...</p> : null}
+        {!isLoading && metrics.length === 0 ? (
+          <p className="text-sm text-slate-400">Todavía no hay métricas disponibles.</p>
+        ) : null}
+        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
       </section>
 
       <Card>

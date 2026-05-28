@@ -19,7 +19,9 @@ export class BrowserService {
     await mkdir(path.resolve('./storage/state'), { recursive: true });
 
     const browser = await chromium.launch({
-      headless: env.headless,
+      // Las ejecuciones periódicas del worker deben correr en segundo plano
+      // para no abrir ventanas cada ciclo.
+      headless: true,
       slowMo: env.slowMo
     });
 

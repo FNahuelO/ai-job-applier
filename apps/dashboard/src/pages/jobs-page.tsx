@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table';
-import { jobs } from '@/data/mock';
+import { getDashboardJobs, type DashboardJob } from '@/lib/dashboard';
 import {
   disconnectLinkedIn,
   getLinkedInConnectStatus,
@@ -14,8 +14,11 @@ import {
 import { getWorkerSettings, updateWorkerSettings } from '@/lib/settings';
 
 export function JobsPage() {
+  const [jobs, setJobs] = useState<DashboardJob[]>([]);
+  const [jobsQuery, setJobsQuery] = useState('');
   const [jobSearchTitle, setJobSearchTitle] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -29,14 +32,16 @@ export function JobsPage() {
 
     async function loadSettings(): Promise<void> {
       try {
-        const [settings, linkedinStatus] = await Promise.all([
+        const [settings, linkedinStatus, jobsData] = await Promise.all([
           getWorkerSettings(),
-          getLinkedInStatus()
+          getLinkedInStatus(),
+          getDashboardJobs()
         ]);
         if (!cancelled) {
           setJobSearchTitle(settings.jobSearchTitle);
           setLinkedinConnected(linkedinStatus.connected);
           setLinkedinConnectedAt(linkedinStatus.connectedAt);
+          setJobs(jobsData);
           setError(null);
         }
       } catch {
@@ -46,6 +51,7 @@ export function JobsPage() {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
+          setIsLoadingJobs(false);
         }
       }
     }
@@ -126,6 +132,11 @@ export function JobsPage() {
       setIsSaving(false);
     }
   }
+
+  const filteredJobs = jobs.filter((job) => {
+    const haystack = `${job.title} ${job.company} ${job.technologies.join(' ')}`.toLowerCase();
+    return haystack.includes(jobsQuery.trim().toLowerCase());
+  });
 
   return (
     <div className="grid gap-6">
@@ -213,9 +224,14 @@ export function JobsPage() {
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h3 className="text-2xl font-semibold text-white">Jobs encontrados</h3>
-            <p className="text-sm text-slate-400">Filtrado por React, TypeScript, Node.js y remoto.</p>
+            <p className="text-sm text-slate-400">Datos reales sincronizados desde la API.</p>
           </div>
-          <Input className="max-w-xs" placeholder="Buscar por empresa o stack..." />
+          <Input
+            className="max-w-xs"
+            placeholder="Buscar por empresa o stack..."
+            value={jobsQuery}
+            onChange={(event) => setJobsQuery(event.target.value)}
+          />
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-white/10">
@@ -230,7 +246,7 @@ export function JobsPage() {
               </TR>
             </THead>
             <TBody>
-              {jobs.map((job) => (
+              {filteredJobs.map((job) => (
                 <TR key={job.id}>
                   <TD>
                     <div className="font-medium text-white">{job.title}</div>
@@ -250,9 +266,15 @@ export function JobsPage() {
                   </TD>
                 </TR>
               ))}
+              {!isLoadingJobs && filteredJobs.length === 0 ? (
+                <TR>
+                  <TD colSpan={5}>No hay jobs para mostrar.</TD>
+                </TR>
+              ) : null}
             </TBody>
           </Table>
         </div>
+        {isLoadingJobs ? <p className="mt-4 text-sm text-slate-400">Cargando jobs...</p> : null}
       </Card>
     </div>
   );
