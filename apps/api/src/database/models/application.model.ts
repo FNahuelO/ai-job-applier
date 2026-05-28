@@ -2,7 +2,6 @@ import { ApplicationStatus } from '@ai-job-applier/shared';
 import {
   BelongsTo,
   Column,
-  CreatedAt,
   DataType,
   ForeignKey,
   Model,
@@ -11,6 +10,7 @@ import {
 } from 'sequelize-typescript';
 import { Job } from './job.model';
 import { User } from './user.model';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'applications', timestamps: false })
 export class Application extends Model<Application> {
@@ -62,11 +62,6 @@ export class Application extends Model<Application> {
   @Column(DataType.TEXT)
   declare notes: string | null;
 
-  @CreatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at'
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 }

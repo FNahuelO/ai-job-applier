@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { getWorkerEnvironment } from '../config/env.js';
 import { ApiClientService } from './api-client.service.js';
 
 export class LinkedInConnectService {
@@ -45,9 +46,10 @@ export class LinkedInConnectService {
   }
 
   private async runManualLoginFlow() {
+    const env = getWorkerEnvironment(process.env);
     const browser = await chromium.launch({
-      headless: false,
-      slowMo: 100
+      headless: env.headless,
+      slowMo: env.slowMo
     });
     const context = await browser.newContext({
       viewport: { width: 1440, height: 960 }

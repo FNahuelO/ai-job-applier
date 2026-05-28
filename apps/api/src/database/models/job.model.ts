@@ -2,7 +2,6 @@ import { JobSource } from '@ai-job-applier/shared';
 import {
   BelongsTo,
   Column,
-  CreatedAt,
   DataType,
   ForeignKey,
   HasMany,
@@ -12,6 +11,7 @@ import {
 } from 'sequelize-typescript';
 import { Application } from './application.model';
 import { Company } from './company.model';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'jobs', timestamps: false })
 export class Job extends Model<Job> {
@@ -85,12 +85,7 @@ export class Job extends Model<Job> {
   })
   declare technologies: string[];
 
-  @CreatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at'
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 
   @HasMany(() => Application)

@@ -5,10 +5,10 @@ import {
   ForeignKey,
   Model,
   PrimaryKey,
-  Table,
-  UpdatedAt
+  Table
 } from 'sequelize-typescript';
 import { User } from './user.model';
+import { updatedAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'linkedin_sessions', timestamps: false })
 export class LinkedInSession extends Model<LinkedInSession> {
@@ -38,16 +38,12 @@ export class LinkedInSession extends Model<LinkedInSession> {
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    field: 'connected_at'
+    field: 'connected_at',
+    defaultValue: () => new Date()
   })
   declare connectedAt: Date;
 
-  @UpdatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'updated_at'
-  })
+  @Column(updatedAtColumnOptions)
   declare updatedAt: Date;
 
   @BelongsTo(() => User)

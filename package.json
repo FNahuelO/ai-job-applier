@@ -19,6 +19,10 @@
     "format": "prettier --write .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
+    "worker:check": "bash scripts/worker-check.sh",
+    "worker:up": "docker compose -f docker-compose.worker.yml up -d --build",
+    "worker:down": "docker compose -f docker-compose.worker.yml down",
+    "worker:logs": "docker compose -f docker-compose.worker.yml logs -f worker",
     "db:logs": "docker compose logs -f postgres",
     "deploy:vercel": "bash scripts/vercel-deploy.sh"
   },

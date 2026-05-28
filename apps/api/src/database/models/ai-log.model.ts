@@ -1,11 +1,5 @@
-import {
-  Column,
-  CreatedAt,
-  DataType,
-  Model,
-  PrimaryKey,
-  Table
-} from 'sequelize-typescript';
+import { Column, DataType, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'ai_logs', timestamps: false })
 export class AiLog extends Model<AiLog> {
@@ -34,11 +28,6 @@ export class AiLog extends Model<AiLog> {
   })
   declare type: string;
 
-  @CreatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at'
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 }

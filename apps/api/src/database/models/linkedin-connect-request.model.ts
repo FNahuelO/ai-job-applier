@@ -1,7 +1,6 @@
 import {
   BelongsTo,
   Column,
-  CreatedAt,
   DataType,
   ForeignKey,
   Model,
@@ -9,6 +8,7 @@ import {
   Table
 } from 'sequelize-typescript';
 import { User } from './user.model';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'linkedin_connect_requests', timestamps: false })
 export class LinkedInConnectRequest extends Model<LinkedInConnectRequest> {
@@ -55,12 +55,7 @@ export class LinkedInConnectRequest extends Model<LinkedInConnectRequest> {
   })
   declare expiresAt: Date;
 
-  @CreatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at'
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 
   @BelongsTo(() => User)

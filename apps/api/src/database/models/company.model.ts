@@ -1,6 +1,5 @@
 import {
   Column,
-  CreatedAt,
   DataType,
   HasMany,
   Model,
@@ -8,6 +7,7 @@ import {
   Table
 } from 'sequelize-typescript';
 import { Job } from './job.model';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'companies', timestamps: false })
 export class Company extends Model<Company> {
@@ -30,12 +30,7 @@ export class Company extends Model<Company> {
   @Column(DataType.STRING)
   declare linkedin: string | null;
 
-  @CreatedAt
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at'
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 
   @HasMany(() => Job)

@@ -10,6 +10,7 @@ import {
 } from 'sequelize-typescript';
 import { Application } from './application.model';
 import { LinkedInSession } from './linkedin-session.model';
+import { createdAtColumnOptions } from './timestamp-columns';
 
 @Table({ tableName: 'users', timestamps: false })
 export class User extends Model<User> {
@@ -41,12 +42,7 @@ export class User extends Model<User> {
   })
   declare jobSearchTitle: string;
 
-  @Column({
-    type: DataType.DATE,
-    allowNull: false,
-    field: 'created_at',
-    defaultValue: () => new Date()
-  })
+  @Column(createdAtColumnOptions)
   declare createdAt: Date;
 
   @HasMany(() => Application)
