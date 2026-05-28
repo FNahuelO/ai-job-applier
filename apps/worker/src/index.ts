@@ -41,9 +41,9 @@ async function processUsers(apiClient: ApiClientService): Promise<void> {
 
       for (const job of jobs) {
         await linkedinService.openJob(page, job.url);
-        const applied = await applyService.attemptEasyApply(page);
+        const applyResult = await applyService.attemptEasyApply(page);
         processedJobs += 1;
-        if (applied) {
+        if (applyResult.applied) {
           appliedJobs += 1;
         }
         console.log(
@@ -51,7 +51,8 @@ async function processUsers(apiClient: ApiClientService): Promise<void> {
             event: 'job_processed',
             userId: user.userId,
             job,
-            applied,
+            applied: applyResult.applied,
+            applyReason: applyResult.reason,
             timestamp: new Date().toISOString()
           })
         );
