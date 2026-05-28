@@ -9,31 +9,61 @@ export interface ApplyAttemptResult {
   reason: string;
 }
 
+const EXTERNAL_APPLY_PATTERN =
+  /sitio web de la empresa|company website|employer.?s website|en el sitio web|offsite|externo|external/i;
+
 export class ApplyService {
+  private async isExternalApplyButton(button: Locator): Promise<boolean> {
+    const ariaLabel = (await button.getAttribute('aria-label').catch(() => '')) ?? '';
+    const text = (await button.textContent().catch(() => '')) ?? '';
+    const className = (await button.getAttribute('class').catch(() => '')) ?? '';
+    const combined = `${ariaLabel} ${text} ${className}`;
+
+    if (EXTERNAL_APPLY_PATTERN.test(combined)) {
+      return true;
+    }
+
+    if (className.includes('jobs-apply-button--offline')) {
+      return true;
+    }
+
+    return false;
+  }
+
   private async findEasyApplyButton(page: Page): Promise<Locator | null> {
-    const candidates: Locator[] = [
-      page.locator('button.jobs-apply-button'),
-      page.locator('.jobs-apply-button--top-card button'),
-      page.locator('button[aria-label*="Solicitud sencilla" i]'),
-      page.locator('button[aria-label*="Easy Apply" i]'),
-      page.getByRole('button', { name: /solicitud sencilla|easy apply|aplicaci[oó]n sencilla/i })
+    const containerSelectors = [
+      'button.jobs-apply-button:not(.jobs-apply-button--offline)',
+      '.jobs-s-apply button.artdeco-button--primary',
+      '.jobs-details-jobs-unified-top-card__container--two-pane button.jobs-apply-button'
     ];
 
-    for (const candidate of candidates) {
-      const button = candidate.first();
+    for (const selector of containerSelectors) {
+      const button = page.locator(selector).first();
       const visible = await button.isVisible({ timeout: 2500 }).catch(() => false);
       if (!visible) {
         continue;
       }
 
-      const label =
-        (await button.getAttribute('aria-label').catch(() => null)) ??
-        (await button.textContent().catch(() => '')) ??
-        '';
-      const normalized = label.trim().toLowerCase();
+      if (await this.isExternalApplyButton(button)) {
+        continue;
+      }
 
-      // "Solicitar" sin "sencilla" suele ser postulación externa.
-      if (normalized === 'solicitar' || normalized === 'apply') {
+      return button;
+    }
+
+    const textCandidates = page.getByRole('button', {
+      name: /solicitar|solicitud sencilla|easy apply|aplicaci[oó]n sencilla/i
+    });
+
+    const count = await textCandidates.count().catch(() => 0);
+    for (let index = 0; index < count; index += 1) {
+      const button = textCandidates.nth(index);
+      const visible = await button.isVisible({ timeout: 1500 }).catch(() => false);
+      if (!visible) {
+        continue;
+      }
+
+      if (await this.isExternalApplyButton(button)) {
         continue;
       }
 
@@ -50,21 +80,25 @@ export class ApplyService {
     try {
       await randomDelay(1200, 2200);
 
+      const offlineApply = page.locator(
+        '.jobs-apply-button--offline, a[data-control-name*="offsite"], a[data-control-name*="jobdetails_offsite"]'
+      );
+      if (await offlineApply.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+        return { applied: false, reason: 'Postulación externa (sitio del empleador).' };
+      }
+
       const easyApplyButton = await this.findEasyApplyButton(page);
       if (!easyApplyButton) {
-        const hasExternalApply = await page
-          .getByRole('button', { name: /^solicitar$|^apply$/i })
-          .first()
-          .isVisible({ timeout: 1500 })
-          .catch(() => false);
-
         return {
           applied: false,
-          reason: hasExternalApply
-            ? 'Solo postulación externa (sin Easy Apply).'
-            : 'No se encontró botón de Easy Apply en el aviso.'
+          reason: 'No se encontró botón de postulación en el aviso.'
         };
       }
+
+      const buttonLabel =
+        (await easyApplyButton.getAttribute('aria-label').catch(() => null)) ??
+        (await easyApplyButton.textContent().catch(() => '')) ??
+        'Solicitar';
 
       await easyApplyButton.click();
       await randomDelay();
@@ -86,7 +120,7 @@ export class ApplyService {
         if (await submitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
           await submitButton.click();
           await randomDelay(1800, 3200);
-          return { applied: true, reason: 'Solicitud enviada.' };
+          return { applied: true, reason: `Solicitud enviada (${buttonLabel.trim()}).` };
         }
 
         const nextButton = page
@@ -101,7 +135,10 @@ export class ApplyService {
         break;
       }
 
-      return { applied: false, reason: 'Se abrió Easy Apply pero no se pudo completar el formulario.' };
+      return {
+        applied: false,
+        reason: `Se abrió el flujo (${buttonLabel.trim()}) pero no se completó el envío.`
+      };
     } catch (error) {
       const filename = path.join(env.screenshotsDir, `apply-error-${Date.now()}.png`);
       await page.screenshot({ path: filename, fullPage: true }).catch(() => undefined);
