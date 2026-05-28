@@ -11,58 +11,21 @@ export interface LinkedInJobCard {
 }
 
 export class LinkedInService {
-  private async firstVisible(page: Page, selectors: string[]) {
-    for (const selector of selectors) {
-      const locator = page.locator(selector).first();
-      const visible = await locator.isVisible().catch(() => false);
-      if (visible) {
-        return locator;
-      }
-    }
-
-    return null;
-  }
-
-  async openJobs(page: Page): Promise<void> {
-    await page.goto('https://www.linkedin.com/jobs/', {
-      waitUntil: 'domcontentloaded'
+  private buildJobsSearchUrl(jobSearchTitle?: string): string {
+    const searchQuery = jobSearchTitle?.trim() || defaultJobSearchFilters.keywords.join(' OR ');
+    const params = new URLSearchParams({
+      keywords: searchQuery,
+      location: 'Remote'
     });
-    await randomDelay();
+
+    return `https://www.linkedin.com/jobs/search/?${params.toString()}`;
   }
 
   async searchRelevantJobs(page: Page, jobSearchTitle?: string): Promise<LinkedInJobCard[]> {
-    await this.openJobs(page);
-
-    const searchQuery = jobSearchTitle?.trim() || defaultJobSearchFilters.keywords.join(' OR ');
-    const searchInput = await this.firstVisible(page, [
-      'input[aria-label*="title" i]',
-      'input[aria-label*="cargo" i]',
-      'input[aria-label*="puesto" i]',
-      'input[placeholder*="Search by title" i]',
-      'input[placeholder*="Buscar por puesto" i]',
-      'input[id*="jobs-search-box-keyword-id"]'
-    ]);
-
-    if (!searchInput) {
-      throw new Error('No se encontró el campo de búsqueda de puesto en LinkedIn Jobs.');
-    }
-
-    await searchInput.fill(searchQuery);
-
-    const locationInput = await this.firstVisible(page, [
-      'input[aria-label*="location" i]',
-      'input[aria-label*="ubicación" i]',
-      'input[placeholder*="City, state, or zip code" i]',
-      'input[placeholder*="Ciudad" i]',
-      'input[id*="jobs-search-box-location-id"]'
-    ]);
-
-    if (locationInput) {
-      await locationInput.fill('Remote');
-      await locationInput.press('Enter');
-    } else {
-      await searchInput.press('Enter');
-    }
+    const searchUrl = this.buildJobsSearchUrl(jobSearchTitle);
+    await page.goto(searchUrl, {
+      waitUntil: 'domcontentloaded'
+    });
 
     await randomDelay(1500, 3200);
     await humanScroll(page);
@@ -91,6 +54,16 @@ export class LinkedInService {
         easyApply
       });
     }
+
+    console.log(
+      JSON.stringify({
+        event: 'jobs_search_completed',
+        searchUrl,
+        totalCardsScanned: Math.min(cards.length, 10),
+        easyApplyJobsFound: results.length,
+        timestamp: new Date().toISOString()
+      })
+    );
 
     return results;
   }

@@ -36,10 +36,16 @@ async function processUsers(apiClient: ApiClientService): Promise<void> {
     try {
       const page = await authService.ensureLinkedInSession(context);
       const jobs = await linkedinService.searchRelevantJobs(page, user.jobSearchTitle);
+      let processedJobs = 0;
+      let appliedJobs = 0;
 
       for (const job of jobs) {
         await linkedinService.openJob(page, job.url);
         const applied = await applyService.attemptEasyApply(page);
+        processedJobs += 1;
+        if (applied) {
+          appliedJobs += 1;
+        }
         console.log(
           JSON.stringify({
             event: 'job_processed',
@@ -51,6 +57,17 @@ async function processUsers(apiClient: ApiClientService): Promise<void> {
         );
         await randomDelay(3000, 6500);
       }
+
+      console.log(
+        JSON.stringify({
+          event: 'user_run_summary',
+          userId: user.userId,
+          jobsFound: jobs.length,
+          jobsProcessed: processedJobs,
+          jobsApplied: appliedJobs,
+          timestamp: new Date().toISOString()
+        })
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       console.error(
